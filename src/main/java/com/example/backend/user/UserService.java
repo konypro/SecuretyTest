@@ -1,7 +1,7 @@
 package com.example.backend.user;
 
+import com.example.backend.SecurityConfig;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -11,12 +11,20 @@ import java.util.UUID;
 public class UserService {
     private final UserRepo userRepo;
 
-    public void login(){
-        userRepo.save(new AppUser(UUID.randomUUID().toString(),"test",new BCryptPasswordEncoder().encode("password")));
-    }
 
     public  AppUser  findByUserName(String username) {
         return userRepo.findByUserName(username);
+
+    }
+
+    public void save(NewAppUser newAppUser) {
+        String hashedPassword = SecurityConfig.passwordEncoder.encode(newAppUser.password());
+        String id = UUID.randomUUID().toString();
+        String userName = newAppUser.userName();
+
+        AppUser appUser = new AppUser(id,userName, hashedPassword);
+
+        userRepo.save(appUser);
 
     }
 }

@@ -4,15 +4,14 @@ import com.example.backend.user.AppUser;
 import com.example.backend.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -21,26 +20,32 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
     private final UserService userService;
 
+
+
+    public static final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity sss) throws Exception {
-        return sss
+    public SecurityFilterChain filterChain(HttpSecurity currywurst) throws Exception {
+        return currywurst
                 .csrf().disable()
                 .httpBasic().and()
                 .authorizeRequests()
-                .antMatchers("/api/autos").authenticated()
+                .antMatchers(HttpMethod.POST,"/api/users").permitAll()
+                .antMatchers("/api/autos","/api/users/login", "/api/users/logout").authenticated()
                 .anyRequest().denyAll()
                 .and().build();
     }
 
     @Bean
     public PasswordEncoder password() {
-        return new BCryptPasswordEncoder();
+        return  passwordEncoder;
     }
 
-
+    @Bean
     public UserDetailsManager userDetailsService() {
         return new UserDetailsManager() {
-            @Bean
+            String unsupportedOperationMsg="You cannot use this custom UserDetailsManager for this action.";
+
             @Override
             public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
                 AppUser userByName = userService.findByUserName(username);
